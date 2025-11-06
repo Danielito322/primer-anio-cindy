@@ -367,9 +367,18 @@ html, body {
 </button>
 <div id="cartita-label">Tocar aquiiii</div>
 
-<audio id="audio" autoplay loop preload="auto" style="display:none">
+<audio id="musica" autoplay loop preload="auto" style="display:none">
   <source src="tequierotanto.mp3" type="audio/mpeg">
 </audio>
+
+<script>
+  document.addEventListener('touchstart', function() {
+    const musica = document.getElementById('musica');
+    musica.play();
+  }, { once: true });
+</script>
+
+
 
 <!-- Modal para la carta -->
 <div id="carta-modal-overlay">
