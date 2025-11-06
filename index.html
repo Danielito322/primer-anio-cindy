@@ -367,11 +367,9 @@ html, body {
 </button>
 <div id="cartita-label">Tocar aquiiii</div>
 
-<audio id="audio" autoplay loop preload="auto" style="display:none">
+<audio id="audio" loop preload="auto" playsinline style="display:none">
   <source src="tequierotanto.mp3" type="audio/mpeg">
 </audio>
-
-
 
 <!-- Modal para la carta -->
 <div id="carta-modal-overlay">
@@ -399,7 +397,7 @@ html, body {
     Recuerdo esos nervios, ese miedo, esa carta que te leí con la voz temblando 🥹 jj… y tú aceptaste.<br>
     En ese momento sentí que el corazón me explotaba de felicidad. Fui el chico más feliz del mundo.</p>
 
-    <p class="carta-text">Volví a casa con una sonrisa tan grande que no me cabía en la cara, pensando en todo lo que viviríamos juntos, en los momentos que nos esperaban, en la emoción de poder llamarte “mi novia”. Y sin darme cuenta, ya te estaba amando con locura. 🥺</p>
+    <p class="carta-text">Volví a casa con una sonrisa tan grande que no me cabía en la cara, pensando en todo lo que viviríamos juntos, en los momentos que nos esperaban, en la emoción de poder llamarte "mi novia". Y sin darme cuenta, ya te estaba amando con locura. 🥺</p>
 
     <p class="carta-text">Desde entonces, mi vida cambió.<br>
     Fuiste —y eres— la persona que me hizo mejorar en todo sentido.<br>
@@ -458,7 +456,7 @@ html, body {
     <p class="carta-text">Y solo espero que te guste, mi amor, y puedas sentir todo lo que te quiero decir. 🥺</p>
 
     <p class="carta-text">Por muchos años más contigo, mi amorcito.<br>
-    Por todos los “te amo”, los abrazos, los besos, las aventuras, las risas que aún nos esperan.<br>
+    Por todos los "te amo", los abrazos, los besos, las aventuras, las risas que aún nos esperan.<br>
     Por todo lo que somos, y por todo lo que todavía seremos.</p>
 
     <p class="carta-text"><strong>Feliz aniversario, mi bonita 🥹💗</strong></p>
@@ -470,7 +468,6 @@ html, body {
   </div>
 </div>
 
-
 <script>
 (function() {
 const err = document.getElementById("err");
@@ -480,25 +477,52 @@ function showError(msg) {
   setTimeout(() => err.style.display = "none", 5000);
 }
 
-// ====== AUTO AUDIO ========
+// ====== AUDIO MANAGEMENT FOR MOBILE ========
 const audio = document.getElementById("audio");
 audio.volume = 0.4;
+let audioStarted = false;
 
-const tryPlay = () => {
-  audio.play().catch(e => {
-    console.log("Autoplay bloqueado, esperando interacción del usuario");
-  });
-};
+// Función para iniciar el audio
+function startAudio() {
+  if (audioStarted) return;
+  
+  const playPromise = audio.play();
+  
+  if (playPromise !== undefined) {
+    playPromise
+      .then(() => {
+        audioStarted = true;
+        console.log("Audio iniciado correctamente");
+      })
+      .catch((error) => {
+        console.log("No se pudo reproducir el audio automáticamente:", error);
+        // No mostramos error visual, solo log
+      });
+  }
+}
 
-const enableAudio = () => {
-  audio.play().catch(() => {});
-  document.removeEventListener('click', enableAudio);
-  document.removeEventListener('touchstart', enableAudio);
-};
+// Capturar cualquier interacción del usuario para iniciar audio
+const interactionEvents = ['click', 'touchstart', 'touchend', 'keydown'];
 
-tryPlay();
-document.addEventListener('click', enableAudio, { once: true });
-document.addEventListener('touchstart', enableAudio, { once: true });
+function handleUserInteraction() {
+  startAudio();
+  // Remover listeners después de la primera interacción exitosa
+  if (audioStarted) {
+    interactionEvents.forEach(event => {
+      document.removeEventListener(event, handleUserInteraction);
+    });
+  }
+}
+
+// Agregar listeners para todas las interacciones posibles
+interactionEvents.forEach(event => {
+  document.addEventListener(event, handleUserInteraction, { once: false, passive: true });
+});
+
+// Intentar reproducir inmediatamente (funcionará en desktop)
+setTimeout(() => {
+  startAudio();
+}, 100);
 
 // ====== WEBGL CHECK ========
 try {
@@ -1431,6 +1455,9 @@ const closeCartaBtn = document.getElementById('close-carta-btn');
 
 // Abrir carta con animación de partículas
 cartitaBtn.addEventListener('click', () => {
+  // Intentar reproducir audio si aún no ha comenzado
+  startAudio();
+  
   // Limpiar timeouts previos
   if (openCartaTimeout) {
     clearTimeout(openCartaTimeout);
@@ -1451,7 +1478,7 @@ cartitaBtn.addEventListener('click', () => {
   launchParticles();
   animateParticles();
   
-  // Abrir modal después de 2 segundos (para que las partículas lleguen más al centro)
+  // Abrir modal después de 2 segundos
   openCartaTimeout = setTimeout(() => {
     cartaModalOverlay.classList.add('active');
   }, 2000);
